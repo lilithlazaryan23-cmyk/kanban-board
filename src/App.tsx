@@ -1,48 +1,45 @@
 import { useState } from "react";
 import type { Task } from "./types/Task";
-import TaskInput from "./components/TaskInput";
+import { useTasks } from "./hooks/useTasks";
+import AddTaskButton from "./components/AddTaskButton";
+import AddTaskModal from "./components/AddTaskModal";
 import Column from "./components/Column";
+import { COLUMNS } from "./constants/columns";
 import "./App.css";
 
 function App() {
-    const [tasks, setTasks] = useState<Task[]>([]);
+    const { tasks, addTask, moveTask, reorderTask } = useTasks();
+    const [modalOpen, setModalOpen] = useState(false);
 
-    const addTask = (text: string) => {
-        if (!text) return;
-
-        setTasks(prev => [
-            ...prev,
-            { id: Date.now(), text, status: "todo" }
-        ]);
+    const handleAddTask = (taskData: Omit<Task, "id" | "order">) => {
+        addTask(taskData);
+        setModalOpen(false);
     };
-
-    const moveTask = (id: number, status: Task["status"]) => {
-        setTasks(prev =>
-            prev.map(task =>
-                task.id === id ? { ...task, status } : task
-            )
-        );
-    };
-
-    const columns = [
-        { title: "To Do", status: "todo" },
-        { title: "Doing", status: "doing" },
-        { title: "Done", status: "done" }
-    ] as const;
 
     return (
         <div className="app">
-            <TaskInput addTask={addTask} />
+            <div className="app-header">
+                <AddTaskButton onClick={() => setModalOpen(true)} />
+            </div>
 
-            {columns.map(col => (
-                <Column
-                    key={col.status}
-                    title={col.title}
-                    status={col.status}
-                    tasks={tasks}
-                    moveTask={moveTask}
-                />
-            ))}
+            <div className="columns">
+                {COLUMNS.map(col => (
+                    <Column
+                        key={col.status}
+                        title={col.title}
+                        status={col.status}
+                        tasks={tasks}
+                        moveTask={moveTask}
+                        reorderTask={reorderTask}
+                    />
+                ))}
+            </div>
+
+            <AddTaskModal
+                isOpen={modalOpen}
+                onCancel={() => setModalOpen(false)}
+                onConfirm={handleAddTask}
+            />
         </div>
     );
 }

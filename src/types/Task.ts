@@ -3,6 +3,8 @@ export type Task = {
     text: string;
     description?: string;
     date?: string;
-    priority?: string;
+    attachment?: string;
+    reminder?: string;
     status: "todo" | "doing" | "done";
+    order: number
 };

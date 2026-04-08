@@ -1,4 +1,4 @@
-
+import {useState} from  "react"
 import type { Task } from "../types/Task.ts";
 import TaskItem from "./TaskItem";
 
@@ -7,21 +7,45 @@ type Props = {
     status: Task["status"];
     tasks: Task[];
     moveTask: (id: number, status: Task["status"]) => void;
+    reorderTask: (draggedId: number, targetId: number, targetStatus: Task["status"]) => void;
 };
 
+export default function Column({ title, status, tasks, moveTask, reorderTask }: Props) {
+    const [isDragOver, setIsDragOver] = useState(false);
+    const columnTasks = tasks
+        .filter(task => task.status === status)
+        .sort((a, b) => a.order - b.order);
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(true);
+    };
 
-export default function Column({ title, status, tasks, moveTask }: Props) {
+    const handleDragLeave = () => {
+        setIsDragOver(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        setIsDragOver(false);
+        const taskId = Number(e.dataTransfer.getData("taskId"));
+        moveTask(taskId, status);
+    };
     return (
-        <div style={{ width: "250px", background: "#eee", padding: "10px" }}>
-            <h3>{title}</h3>
+        <div
+            className={`column ${isDragOver ? "drag-over" : ""}`}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+        >
+            <h3 className="column-title">{title}</h3>
 
-            {tasks
-                .filter(t => t.status === status)
-                .map(task => (
+            {columnTasks.map(task => (
                     <TaskItem
                         key={task.id}
                         task={task}
                         moveTask={moveTask}
+                        reorderTask={reorderTask}
+                        status={status}
                     />
                 ))}
         </div>
